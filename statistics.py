@@ -15,7 +15,7 @@ def calculateStatistics(inputDir):
     #iteration code from: https://www.geeksforgeeks.org/how-to-iterate-over-files-in-directory-using-python/
     for env in os.listdir(inputDir):
         numEnvs += 1 #first layer of directory is the number of environments
-        if env.startswith('.'): continue #skip useless files
+        if env.startswith('.DS'): continue #skip useless files
         fEnv = os.path.join(inputDir, env)
         print("fEnv is", fEnv)
         if os.path.isfile(fEnv): # checking if it is a file. should not be file yet
@@ -23,17 +23,17 @@ def calculateStatistics(inputDir):
 
         for traj in os.listdir(fEnv): #iterate through all trajectories in each env subfolder
             totalTrajectories += 1 #second layer of directory is the number of trajectories
+            if traj.startswith('.DS'): continue #skip useless file
             fTraj = os.path.join(fEnv, traj)
             print("fTraj is ", fTraj)
-            if fTraj.startswith('.'): continue #skip useless file
             if os.path.isfile(fTraj):  # checking if it is a file. should not be file yet
                 raise Exception("There should be depth, semantic, and rgb info within trajectory folder.")
             #take the first folder in this case to check len.from
 
             for dir in os.listdir(fTraj):
+                if dir.startswith('.DS'): continue #skip useless file
                 depthDir = os.path.join(fTraj, dir)
                 print("depth dir is", depthDir)
-                if depthDir.startswith('.'): continue #skip useless file
                 if os.path.isfile(depthDir): #should also not be a file.
                     raise Exception("There should be pictures in the depthDir.")
 
