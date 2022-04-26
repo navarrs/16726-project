@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import torchvision.utils as vutils
 
-#Code from CMU 16-726 HW5
+#Code to convert images to gif from CMU 16-726 HW5
 def save_images(image, fname, col=8):
     image = image.cpu().detach()
     image = image / 2 + 0.5
