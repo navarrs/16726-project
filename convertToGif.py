@@ -13,10 +13,7 @@ def save_images(image, fname, col=8):
     transform = transforms.Compose([
         transforms.PILToTensor()
     ])
-    image = Image.open(image)
-    image = transform(image)
-
-    image = image / 2 + 0.5
+    image = transform(Image.open(image))
 
     image = vutils.make_grid(image, nrow=col)  # (C, H, W)
     image = image.numpy().transpose([1, 2, 0])
