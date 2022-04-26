@@ -32,7 +32,7 @@ def parse_arg():
     """Creates a parser for command-line arguments.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--inputDir', type=str, default='data/sketch/*.png', help="path to the input image")
+    parser.add_argument('--inputDir', type=str, default='input/*.png', help="path to the input image")
 
     return parser.parse_args()
 
