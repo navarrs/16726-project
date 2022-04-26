@@ -59,7 +59,7 @@ if __name__ == '__main__':
     #TODO: FIGURE OUT A WAY TO IGNORE NON .PNG FILES
     image_list = [imagesPath+s for s in imagePathsList]
     print(image_list)
-    outputDir = '%s/output/%s_%s_%s' % (os.path.expanduser("~/Desktop"), args.envName, args.trajectoryName, args.gifType)
+    outputDir = '%s/gifs/%s_%s_%s' % (os.path.expanduser("~/Desktop"), args.envName, args.trajectoryName, args.gifType)
     print(outputDir)
     save_gifs(image_list, outputDir, args.gifType)
 
