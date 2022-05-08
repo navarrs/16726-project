@@ -1,154 +1,205 @@
-# SfMLearner Pytorch version
-This codebase implements the system described in the paper:
+# 16726 - Learning-based Image synthesis - Final Project 
 
-Unsupervised Learning of Depth and Ego-Motion from Video
+### SemSyn: Semantics-driven View-Synthesis 
 
-[Tinghui Zhou](https://people.eecs.berkeley.edu/~tinghuiz/), [Matthew Brown](http://matthewalunbrown.com/research/research.html), [Noah Snavely](http://www.cs.cornell.edu/~snavely/), [David G. Lowe](http://www.cs.ubc.ca/~lowe/home.html)
+This code contains the implementation for the final project of 16-726.
 
-In CVPR 2017 (**Oral**).
+<div align="center">
+    <img src="assets/sample.gif"/>
+</div>
 
-See the [project webpage](https://people.eecs.berkeley.edu/~tinghuiz/projects/SfMLearner/) for more details. 
+The backbone of the code is based on this [repo](https://github.com/ClementPinard/SfmLearner-Pytorch) 
+which implements the following paper: 
 
-Original Author : Tinghui Zhou (tinghuiz@berkeley.edu)
-Pytorch implementation : Clément Pinard (clement.pinard@ensta-paristech.fr)
+**Unsupervised Learning of Depth and Ego-Motion from Video** by
+[Tinghui Zhou](https://people.eecs.berkeley.edu/~tinghuiz/), 
+[Matthew Brown](http://matthewalunbrown.com/research/research.html), 
+[Noah Snavely](http://www.cs.cornell.edu/~snavely/), 
+[David G. Lowe](http://www.cs.ubc.ca/~lowe/home.html)
 
-![sample_results](misc/cityscapes_sample_results.gif)
+For our project, we:
+- Extend the framework to perform view-synthesis and Structure-from-Motion on indoor environments.
+- Provide instructions and utility code needed to generate the indoor dataset.
+- Extend it to support semantic labels as inputs for predicting depth information.
+- Extend the supported loss functions.
 
-## Preamble
-This codebase was developed and tested with Pytorch 1.0.1, CUDA 10 and Ubuntu 16.04. Original code was developped in tensorflow, you can access it [here](https://github.com/tinghuiz/SfMLearner)
-
-## Prerequisite
+## Requirements and setup
+This code was tested with Pytorch 1.11.0, CUDA 11.4 and Ubuntu 18.04. We 
+followed the setup below: 
 
 ```bash
-pip3 install -r requirements.txt
+conda create -n sfm python=3.7
+conda activate sfm
+pip install -r requirements.txt
 ```
 
-or install manually the following packages :
+## Preparing the dataset 
 
-```
-pytorch >= 1.0.1
-pebble
-matplotlib
-imageio
-scipy
-scikit-image
-argparse
-tensorboardX
-blessings
-progressbar2
-path.py
-```
+We used the Matterport3D ([MP3D](https://niessner.github.io/Matterport/)) dataset for 
+our project and the [Habitat](https://aihabitat.org) simulation environment to 
+generate egocentric trajectories for training, validation and testing. 
 
-### Note
-Because it uses latests pytorch features, it is not compatible with anterior versions of pytorch.
+<div align="center">
+    <img src="assets/rgb.gif"/>
+    <img src="assets/depth.gif"/>
+    <img src="assets/semantics.gif"/>
+</div>
 
-If you don't have an up to date pytorch, the tags can help you checkout the right commits corresponding to your pytorch version.
+### How to get the Matterport3D dataset?
 
-### What has been done
-
-* Training has been tested on KITTI and CityScapes.
-* Dataset preparation has been largely improved, and now stores image sequences in folders, making sure that movement is each time big enough between each frame
-* That way, training is now significantly faster, running at ~0.14sec per step vs ~0.2s per steps initially (on a single GTX980Ti)
-* In addition you don't need to prepare data for a particular sequence length anymore as stacking is made on the fly.
-* You can still choose the former stacked frames dataset format.
-* Convergence is now almost as good as original paper with same hyper parameters
-* You can know compare with ground truth for your validation set. It is still possible to validate without, but you now can see that minimizing photometric error is not equivalent to optimizing depth map.
-
-### Differences with official Implementation
-
-* Smooth Loss is different from official repo. Instead of applying it to disparity, we apply it to depth. Original disparity smooth loss did not work well (don't know why !) and it did not even converge at all with weight values used (0.5).
-* loss is divided by `2.3` when downscaling instead of `2`. This is the results of empiric experiments, so the optimal value is clearly not carefully determined.
-* As a consequence, with a smooth loss of `2.0̀`, depth test is better, but Pose test is worse. To revert smooth loss back to original, you can change it [here](train.py#L270)
-
-## Preparing training data
-Preparation is roughly the same command as in the original code.
-
-For [KITTI](http://www.cvlibs.net/datasets/kitti/raw_data.php), first download the dataset using this [script](http://www.cvlibs.net/download.php?file=raw_data_downloader.zip) provided on the official website, and then run the following command. The `--with-depth` option will save resized copies of groundtruth to help you setting hyper parameters. The `--with-pose` will dump the sequence pose in the same format as Odometry dataset (see pose evaluation)
+##### Scenes:
+We use the MP3D's scene reconstructions. The official Matterport3D download script 
+(`download_mp.py`) can be accessed by following the instructions [here](https://niessner.github.io/Matterport/). 
+The scene data can then be downloaded:
 ```bash
-python3 data/prepare_train_data.py /path/to/raw/kitti/dataset/ --dataset-format 'kitti_raw' --dump-root /path/to/resulting/formatted/data/ --width 416 --height 128 --num-threads 4 [--static-frames /path/to/static_frames.txt] [--with-depth] [--with-pose]
+# requires running with python 2.7
+python download_mp.py --task habitat -o data/scene_datasets/mp3d/
 ```
 
+We extracted it such that it has the form `data/scene_datasets/mp3d/{scene}/{scene}.glb`.
+There should be 90 scenes.
 
-For [Cityscapes](https://www.cityscapes-dataset.com/), download the following packages: 1) `leftImg8bit_sequence_trainvaltest.zip`, 2) `camera_trainvaltest.zip`. You will probably need to contact the administrators to be able to get it. Then run the following command
+##### Trajectories:
+We use the Vision-Language Navigation in Continuous Environments ([VLN-CE](https://jacobkrantz.github.io/vlnce/)) 
+dataset for getting the ego-centric trajectories. We used the ```R2R_VLNCE_v1-3_preprocessed``` 
+version of the dataset from their [repository](https://github.com/jacobkrantz/VLN-CE).
+We extracted it such that it has the form `data/R2R_VLNCE_v1-3_preprocessed/{split}/{split}.json.gz`.
+
+##### Simulator:
+We used the [Habitat-Sim](git@github.com:facebookresearch/habitat-sim.git) and 
+[Habitat-Lab](git@github.com:facebookresearch/habitat-lab.git) to prepare de dataset.
+To install them, run:
+
 ```bash
-python3 data/prepare_train_data.py /path/to/cityscapes/dataset/ --dataset-format 'cityscapes' --dump-root /path/to/resulting/formatted/data/ --width 416 --height 171 --num-threads 4
+# this is habitat-sim
+conda install -c aihabitat -c conda-forge habitat-sim=0.1.7 headless
+
+# this is for habitat-lab
+git clone --branch v0.1.7 git@github.com:facebookresearch/habitat-lab.git
+cd habitat-lab
+python -m pip install -r requirements.txt
+python setup.py develop --all
 ```
-Notice that for Cityscapes the `img_height` is set to 171 because we crop out the bottom part of the image that contains the car logo, and the resulting image will have height 128.
+
+##### The actual data we used:
+Finally, in ```data/habitat_extension``` we provide the code we used to generate
+the data we used in this project. Run it as:
+```bash
+python data/habitat_extension/run.py --exp-config data/habitat_extension/mp3d.yaml
+```
+The code should generate color, depth and semantic images, and pose information 
+for each trajectory, as shown in the gif above. 
+
+##### Post-processing steps:
+
+Some additional post-processing steps was performed. These steps include switching color channels, converting the semantic 
+images to labels, adding intrinsic parameters to the dataset, and analyzing trajectory statistics for the ego motion.
+None of these post-processing steps require the simulator.
+- Switching Color Channels <br>
+The red and blue channels are swapped in the generation of the RGB output during the trajectory training, therefore,
+they need to be swapped back in order to form the right RGB image sequence. This is achieved in the file convert_bgr_to_rgb.py.
+Each BGR image in the directory is converted into an RGB image using CV2's cvtColor functionality. The corrected RGB
+images then overwrite the old BGR images and this directory of RGB images can then be turned into a GIF. <br>
+
+- Converting Semantic Images to Labels <br>
+Generated output GIFs were also labelled using semantic labelling. This was done in generate_semantic_masks.py. Each image in
+the GIF outputs were masked with a semantic mask. Each of the masked areas of pixels were replaced by a specified associated color.
+
+- Compute Trajectory Statistics <br>
+The trajectory statistics of generated ego motion were also analyzed. In particular, total number of environments, total
+number of trajectories, and average, min, and max trajectory lengths for each environment were calculated. This was done in
+compute_statistics.py. Total number of environments was calculated by counting the number of directories under each condition
+val_seen, val_unseen, and train. These environment directory names are similar to randomly generated keys in appearance. Total number of
+trajectories was calculated by summing up the total number of directories that were under each of the environments in the three
+conditions val_seen, val_unseen, and train. These trajectory directories were named using numbers. Average, min, and max
+trajectory lengths were computed using python inbuilt .mean, .max and .min functions.
+
+- Adding Intrinsic Parameters to the Dataset <br>
+The associated intrinsic camera transform was saved into the directories of each of the RGB ego motion GIFs generated. 
+The code that performs this can be found in add_intrinsics.py.
 
 ## Training
-Once the data are formatted following the above instructions, you should be able to train the model by running the following command
+During the training stage, the model predicts depth and pose information through a view-synthesis loss. Based on previous work,
+there were two networks that required training–the pose network and the depth network. The depth prediction network interprets the inputs
+from the RGB-encoder network and the semantic network into an applicable depth map.
+<br>
+The pose network predicts the pose transformation between a view at time t=n and a view at time t=n+1. The predictions are
+warps between timeframes. 
+<br>
+Each environment and trajectory was trained for a total of 50 epochs due to time and resource constraints. Additional epochs
+of time were added as time allowed.
+
+Training can be done using the following command:
 ```bash
-python3 train.py /path/to/the/formatted/data/ -b4 -m0.2 -s0.1 --epoch-size 3000 --sequence-length 3 --log-output [--with-gt]
+python train_mp3d.py data/mp3d_sfm/ --log-output --mask-loss-weight 0.0 --with-semantics --batch-size 16
 ```
-You can then start a `tensorboard` session in this folder by
-```bash
-tensorboard --logdir=checkpoints/
-```
-and visualize the training progress by opening [https://localhost:6006](https://localhost:6006) on your browser. If everything is set up properly, you should start seeing reasonable depth prediction after ~30K iterations when training on KITTI.
+
 
 ## Evaluation
+During the inference stage, the model is given an input image and a desired set of poses, and uses projective geometry 
+and the predicted depth to synthesize the new viewpoints. 
 
-Disparity map generation can be done with `run_inference.py`
+Pose inference can be run using the following command:
 ```bash
-python3 run_inference.py --pretrained /path/to/dispnet --dataset-dir /path/pictures/dir --output-dir /path/to/output/dir
+python run_pose_inference.py --pretrained-disp checkpoints/mp3d_sfm/exp1_04-26-23:56/dispnet_model_best.pth.tar  --pretrained-pose checkpoints/mp3d_sfm/exp1_04-26-23:56/exp_pose_model_best.pth.tar  --output-dir out/exp1_val/vs_unseen
 ```
-Will run inference on all pictures inside `dataset-dir` and save a jpg of disparity (or depth) to `output-dir` for each one see script help (`-h`) for more options.
-
-Disparity evaluation is avalaible
+And depth inference can be run using the following command:
 ```bash
-python3 test_disp.py --pretrained-dispnet /path/to/dispnet --pretrained-posenet /path/to/posenet --dataset-dir /path/to/KITTI_raw --dataset-list /path/to/test_files_list
-```
-
-Test file list is available in kitti eval folder. To get fair comparison with [Original paper evaluation code](https://github.com/tinghuiz/SfMLearner/blob/master/kitti_eval/eval_depth.py), don't specify a posenet. However, if you do,  it will be used to solve the scale factor ambiguity, the only ground truth used to get it will be vehicle speed which is far more acceptable for real conditions quality measurement, but you will obviously get worse results.
-
-Pose evaluation is also available on [Odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php). Be sure to download both color images and pose !
-
-```bash
-python3 test_pose.py /path/to/posenet --dataset-dir /path/to/KITIT_odometry --sequences [09]
+python run_depth_inference.py --pretrained bach/checkpoints/mp3d_sfm/04-26-23:56/dispnet_model_best.pth.tar  --dataset-dir data/mp3d_sfm/val_unseen  --output-dir exp1_val/depth_unseen --with-disp --with-depth
 ```
 
-**ATE** (*Absolute Trajectory Error*) is computed as long as **RE** for rotation (*Rotation Error*). **RE** between `R1` and `R2` is defined as the angle of `R1*R2^-1` when converted to axis/angle. It corresponds to `RE = arccos( (trace(R1 @ R2^-1) - 1) / 2)`.
-While **ATE** is often said to be enough to trajectory estimation, **RE** seems important here as sequences are only `seq_length` frames long.
 
 ## Pretrained Nets
 
 [Avalaible here](https://drive.google.com/drive/folders/1H1AFqSS8wr_YzwG2xWwAQHTfXN5Moxmx)
 
-Arguments used :
+Arguments used:
 
 ```bash
 python3 train.py /path/to/the/formatted/data/ -b4 -m0 -s2.0 --epoch-size 1000 --sequence-length 5 --log-output --with-gt
 ```
 
-### Depth Results
+### Results
+The following depth GIF results were obtained on new testing data after training the models.
+<br>
+<div align="center">
+    <img src="assets/ep-772_EU6Fwq7SyZv-772-rgb-25.gif"/>
+</div>
+This GIF shows a depth "heatmap" of a given traversal in a given environment. The results are not the clearest when compared
+to the ground truth to the left of it, however, you can still make out the environment.
+<br>
+<div align="center">
+    <img src="assets/ep-1210_8194nk5LbLH-1210-rgb-31.gif"/>
+</div>
+This GIF is an example of output generated when the model has been trained directly on the ground truth. There are some 
+warping issues, but it is still clear what the environment is and where the trajectory of the ego motion is going when
+compared to the ground truth.
+<br>
+<div align="center">
+    <img src="assets/ep-1837_Z6MFQCViBuw-1837-rgb-64.gif"/>
+</div>
+This GIF is an example of output generated when the model predicts the next frame of the image. This results in even more
+noticeable warping issues during certain segments of the GIF, but it is still pretty clear what the environment is and where
+the trajectory is going.
 
-| Abs Rel | Sq Rel | RMSE  | RMSE(log) | Acc.1 | Acc.2 | Acc.3 |
-|---------|--------|-------|-----------|-------|-------|-------|
-| 0.181   | 1.341  | 6.236 | 0.262     | 0.733 | 0.901 | 0.964 | 
+<br>
+<br>
+Here were the trajectory statistics obtained after training the pose network.
 
-### Pose Results
-
-5-frames snippets used
-
-|    | Seq. 09              | Seq. 10              |
-|----|----------------------|----------------------|
-|ATE | 0.0179 (std. 0.0110) | 0.0141 (std. 0.0115) |
-|RE  | 0.0018 (std. 0.0009) | 0.0018 (std. 0.0011) | 
+| Split | Number of Scenes | # Trajectories/Scene | # of Total Trajectories | # steps/Trajectory |
+|-------|------------------|----------------------|-------------------------|--------------------|
+| Train | 33               | 65                   | 2169                    | 55 / 119,976       |
+| Val   | 28               | 5                    | 142                     | 54 / 7750          |
+| Test  | 11               | 55                   | 613                     | 54 / 33,412        |
 
 
-## Discussion
-
-Here I try to link the issues that I think raised interesting questions about scale factor, pose inference, and training hyperparameters
-
- - [Issue 48](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/48) : Why is target frame at the center of the sequence ?
- - [Issue 39](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/39) : Getting pose vector without the scale factor uncertainty
- - [Issue 46](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/46) : Is Interpolated groundtruth better than sparse groundtruth ?
- - [Issue 45](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/45) : How come the inverse warp is absolute and pose and depth are only relative ?
- - [Issue 32](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/32) : Discussion about validation set, and optimal batch size
- - [Issue 25](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/25) : Why filter out static frames ?
- - [Issue 24](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/24) : Filtering pixels out of the photometric loss
- - [Issue 60](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/60) : Inverse warp is only one way !
+## Conclusion and Future Goals
+In short, SemSyn works reasonably well in generation of ego motion based on the indoor scenes and trajectories given by the
+MatterPort3D dataset. We believe that the model would be even more accurate at portraying these indoor trajectories if they
+were given even more training time.
+Some things that we can try going forward include:
+- 3D point loss
+- Improve multi-scale loss
 
 ## Other Implementations
-
 [TensorFlow](https://github.com/tinghuiz/SfMLearner) by tinghuiz (original code, and paper author)
