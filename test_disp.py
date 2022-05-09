@@ -1,4 +1,3 @@
-import argparse
 import csv
 import numpy as np
 import os
@@ -7,7 +6,7 @@ from imageio import imread
 from path import Path
 from natsort import natsorted
 
-from models import PoseExpNet, DispNetS, SemDispNetS
+from models import DispNetS, SemDispNetS
 from utils.common import array2tensor
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -130,7 +129,7 @@ if __name__ == '__main__':
     import argparse
     
     parser = argparse.ArgumentParser(
-        description='Pose inference script for the MP3D Sfm',
+        description='Disp test script for the MP3D Sfm',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     # I/O

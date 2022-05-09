@@ -864,7 +864,7 @@
         <h6 class="mb-3 text-primary">4.3.1 Depth Network</h6>
 
         <p class="lead mb-3"> 
-          In <strong>Table 2</strong> we compare the ground truth depth and the 
+          In <strong>Table 3</strong> we compare the ground truth depth and the 
           predicted depth for each experiment and report three error metrics
           also reported in [6]:
           <ol>
@@ -891,7 +891,7 @@
 
         <div class="lead mb-3">
           <table class="styled-table" align="center">
-            <caption>Table 2. Depth Error Metrics</caption>
+            <caption>Table 3. Depth Error Metrics</caption>
             <thead>
                 <tr>
                     <th>Experiment</th>
@@ -926,6 +926,56 @@
         <hr>
 
         <h6 class="mb-3 text-primary">4.3.2 Pose Network</h6>
+
+        <p class="lead mb-3"> 
+          In <strong>Table 4</strong> we compare the ground truth poses obtained 
+          using the Habitat simulator and the 
+          predicted pose information for each experiment and report three error metrics
+          also reported in [6]:
+          <ol>
+            <li><strong>ATE</strong>: absolute trajectory error </li>
+            <li><strong>RE</strong>: rotation error </li>
+          </ol>
+        </p>
+
+        <p class="lead mb-3"> 
+          These results show that <strong>Experiment 2</strong> acheived 
+          slighlty lower pose error compared to the other two experiments. 
+          Nonetheless, from visual inspection in <strong>Section 4.2.2</strong> 
+          it is difficult to assess whether this model's predicted poses are 
+          in fact "better" since the warps are more marked for the latter 
+          two experiments. 
+        </p>
+
+        <div class="lead mb-3">
+          <table class="styled-table" align="center">
+            <caption>Table 4. Pose Error Metrics</caption>
+            <thead>
+                <tr>
+                    <th>Experiment</th>
+                    <th>ATE</th>
+                    <th>RE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="active-row">
+                  <td style="text-align:center"><code>1</code></td>
+                  <td style="text-align:center">0.0203</td>
+                  <td style="text-align:center">0.2006</td>
+                </tr>
+                <tr class="active-row">
+                  <td style="text-align:center"><code>2</code></td>
+                  <td style="text-align:center">0.0164</td>
+                  <td style="text-align:center">0.1429</td>
+                </tr>
+                <tr class="active-row">
+                  <td style="text-align:center"><code>3</code></td>
+                  <td style="text-align:center">0.0219</td>
+                  <td style="text-align:center">0.1554</td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
 
         </div>
       </section>
