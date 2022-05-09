@@ -755,6 +755,11 @@
           </div>
         </p>
 
+        <p class="lead mb-3">
+          As you can see below in Fig. 7, pose warping based on ground truth and predicted depth both give somewhat results.
+          The ground truth pose warping gave the clearer results of the two.
+        </p>
+
         <p class="lead mb-3" > 
           <div class="lead mb-3 img_container" align="center">
             <img src="data/project/exp1_val/pose_unseen_gt_depth/ep-850_oLBMNvg9in8-850-rgb-87.gif" class="img_item_2x">
@@ -782,9 +787,10 @@
           Analyzing the predicted masks, we conclude that this method did not 
           achieve what we intended: the predicted masks do not predict occluding 
           objects nor visual artificats. In fact, in several cases, the masks 
-          predict large parts of the image. This may explain why the loss during 
+          predict large parts of the image. This may explain why the loss for the artifact mask during
           training and validation was the lowest, and why it did not improve 
-          significantly throughout the entire process. 
+          significantly throughout the entire process. As you can see in the third column, there is significant warping
+          in the outputs generated using the artifact mask.
         </p>
 
         <p class="lead mb-3" > 
@@ -824,6 +830,12 @@
           ground truth depth vs predicted depth.
         </p>
 
+        <p class="lead mb-3">
+          As you can see, there is pretty significant warping in some of the generated outputs. This could be due to the
+          relatively small number of epochs we were able to train the model. We expect that these results should improve
+          if they are given more training time.
+        </p>
+
         <p class="lead mb-3" > 
           <div class="lead mb-3 img_container" align="center">
             <img src="data/project/exp3_val/pose_unseen_gt_depth/ep-262_2azQ1b91cZZ-262-rgb-61_rgb.gif" class="img_item_x">
@@ -842,6 +854,13 @@
           </figure>
           </div>
         </p>
+
+        <p class="lead mb-3">
+          Similar to Fig. 7, Fig. 11 compares the results of warping based on ground truth and based on predictions of the
+          next frame. Again, warping based on ground truth produces slightly better results than those that were based on
+          predictions.
+        </p>
+
 
         <p class="lead mb-3" > 
           <div class="lead mb-3 img_container" align="center">
@@ -881,7 +900,7 @@
           These results show that <strong>Experiment 1</strong> acheived 
           significantly lower error as compared to the other two experiments. 
           Nonetheless, from visual inspection in <strong>Section 4.2.1</strong> 
-          we observed that <strong>Experiment 1</strong> underfit to the training 
+          we observed that <strong>Experiment 1</strong> underfit to the training
           process. The reported errors for the remaining two experiments are 
           similar. As we discussed before, these experiments showed various limitations:
           in <strong>Experiment 2</strong> the predicted depths are very blurry, 
@@ -1003,6 +1022,13 @@
               this to be the result of the shortest path follower algorithm sticking the corners of the environments. Due to this,
               it is more likely to encounter large featureless semantic mask blobs that take up most of its FOV, thus generating
               a diagonal gradient across the screen.
+            </li>
+            <li>
+              Pose warping based on ground truth produces slightly better results than those that were based on predictions
+            </li>
+            <li>
+              The artifact mask ended up masking out most of the relevant parts of a scene. This experiment did not work
+              as expected, and therefore produced extremely warped outputs.
             </li>
           </ol>
 
