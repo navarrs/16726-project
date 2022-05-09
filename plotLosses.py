@@ -13,15 +13,31 @@ def plotLosses(dirs):
         df = pd.read_csv(dirs[i])  # read the specific file for necessary stuff
         df[['train_loss', 'validation_loss']] = df["train_loss\tvalidation_loss"].str.split('\t', expand=True)
         del df["train_loss\tvalidation_loss"] #drop this monster of a column
-        #print(df)
-        dfTrainLoss["training_exp%d" % (i+1)] = df["train_loss"]
-        dfValidLoss["validation_exp%d" % (i+1)] = df["validation_loss"]
+        trainingColName = ""
+        validationColName = ""
+        if (i==0):
+            trainingColName = "training_exp%d" % (i+1) + "_rgb"
+            validationColName = "validation_exp%d" % (i+1) + "_rgb"
+        elif (i==1):
+            trainingColName = "training_exp%d" % (i + 1) + "_rgb_and_artifact"
+            validationColName = "validation_exp%d" % (i + 1) + "_rgb_and_artifact"
+        else:
+            trainingColName = "training_exp%d" % (i + 1) + "_rgb_and_semantic"
+            validationColName = "validation_exp%d" % (i + 1) + "_rgb_and_semantic"
+
+        dfTrainLoss[trainingColName] = df["train_loss"]
+        dfValidLoss[validationColName] = df["validation_loss"]
 
     dfTrainLoss = dfTrainLoss.astype('float', copy=False)
     dfValidLoss = dfValidLoss.astype('float', copy=False)
-    ax = dfTrainLoss.plot()
-    dfValidLoss.plot(ax=ax, linestyle="dotted")
-    plt.title("Validation and Training Losses")
+    dfTrainLoss.plot()
+    plt.title("Training Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.show()
+
+    dfValidLoss.plot(linestyle="dotted")
+    plt.title("Validation Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.show()
