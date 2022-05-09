@@ -756,8 +756,10 @@
         </p>
 
         <p class="lead mb-3">
-          As you can see below in Fig. 7, pose warping based on ground truth and predicted depth both give somewhat results.
-          The ground truth pose warping gave the clearer results of the two.
+          As you can see below in <strong>Figure 7</strong>, pose warping based 
+          on ground truth and predicted depth both give somewhat similar results.
+          However, with predicted depth, the results tend to be slightly more 
+          bent and crooked. This is the same case for all three experiments. 
         </p>
 
         <p class="lead mb-3" > 
@@ -831,9 +833,12 @@
         </p>
 
         <p class="lead mb-3">
-          As you can see, there is pretty significant warping in some of the generated outputs. This could be due to the
-          relatively small number of epochs we were able to train the model. We expect that these results should improve
-          if they are given more training time.
+          As you can see, there is pretty significant warping in some of the generated outputs. 
+          We acknowledge that, this could be due to the
+          relatively small number of epochs we were able to train the model and that
+          we were also unable to run hyper-parameter search experiments. We expect 
+          that these results should improve as more experiments are carried and 
+          the effect of each hyper-parameter is more throughly understood.
         </p>
 
         <p class="lead mb-3" > 
@@ -1010,12 +1015,15 @@
         </p>
           <ol>
             <li>
-              RGB-only experimental cases tended to underfit the dataset. Resulting GIFs tended to all look the same,
+              RGB-only experimental cases tended to underfit the dataset with high training 
+              and validation loss. Resulting in the visualizations which tended to all look the same,
               regardless of what environment they were generated from.
             </li>
           <li>
-            The RGB and Artifact mask experimental case tended to do better than RGB-only. It more accurately labels
-            ceilings to be further and floors to be closer.
+            The RGB and Artifact mask experimental case tended to do better than RGB-only in understanding
+            depth. For instance, darker regions were more often predicted at the ceilings or at the 
+            center of the image (representing objects that were further away) and viceversa. Nonetheless, 
+            the predicted depths tended to be more blurry, and the warps were significantly more marked. 
             </li>
             <li>
             The RGB and semantic mask experimental case gave very unexpected diagonal gradient-like results. We believe
@@ -1024,18 +1032,19 @@
               a diagonal gradient across the screen.
             </li>
             <li>
-              Pose warping based on ground truth produces slightly better results than those that were based on predictions
-            </li>
-            <li>
               The artifact mask ended up masking out most of the relevant parts of a scene. This experiment did not work
               as expected, and therefore produced extremely warped outputs.
             </li>
           </ol>
 
         <p class="lead mb-3">
-          Despite these interesting quirks, SemSynSin works reasonably well in generation of ego motion based on the indoor
-          scenes and trajectories given by the MatterPort3D dataset. We believe that the model would be even more accurate
-          at portraying these indoor trajectories if they were given even more training time.
+          Despite these interesting quirks and all the challenges we faced, <i>e,g.,</i> having a low quality dataset, 
+          to having limited resources for training more experiments and better analyzing the effect of our 
+          hyper-parameters and loss functions, etc, we got interesting results on the indoor
+          scenes and trajectories given by the MatterPort3D dataset. 
+          We believe that the model would be even more accurate
+          at portraying these indoor trajectories if they were given more time and 
+          resources for training more experiments to better understand the hyper-parameters.
         </p>
 
         <p class="lead mb-3">
@@ -1047,14 +1056,23 @@
             used to grab 3D coordinates for a specific pixel in the target frame. In a similar method, the 3D coordinates for
             the source pixel associated with that specific target pixel can be obtained by applying a transformation matrix to
             the depth maps. After these two have been obtained, 3D loss can be calculated as the difference between the transformed
-            source and target pixel. Lower loss indicates better 3D point loss.
+            source and target pixel. This loss would be more appropriate for analyzing 3D structures and better understanding 
+            occluding objects. 
           </li>
           <li><strong>Improve multi-scale loss:</strong>
-            In this project, we use bilinear sampling to derive gradients. In particular they are derived from the pixel
-            intensity difference between the target pixel and the 4-neighbor pixels from the source. Sometimes, the correct
-            pixel is far from the current local estimate, which is where multi-scale smoothness loss comes in.
-            It allows gradients to be propagated from larger spatial regions. Multi scale loss in this case is the combination
-            of the individual losses at each scale in the decoder.
+            As pointed out in [8], the current multi-scale loss has a tendency for 
+            creating "holes" in large low texture regions in lower scale depth maps. 
+            One improvement proposed in [8] consists of up-sampling the lower 
+            scale depth maps to the input scale and then compute the multi-scale 
+            photometric error. They showed this to be an effective idea that 
+            allows them to constrain the depth maps at all scales to work on the 
+            same objective: reconstruct the input-resolution image. 
+          </li>
+          <li><strong>Improve generated trajectories:</strong>
+            Address the issue of the shortest-path-follower that navigates close to obstacles
+            as opposed to centered to the path it follows. For instance, when we walk in a hallway, 
+            we generally walk centered to it, as opposed to following the wall edges. This would 
+            allow us to get better viewpoints that are less occluded by large objects like walls. 
           </li>
         </ol>
 
@@ -1085,6 +1103,8 @@
               [<a href="http://www.cvlibs.net/datasets/kitti/">link</a>]</li>
             <li>Semantics Driven Unsupervised Learning for Monocular Depth and Ego Motion Estimation
               [<a href="https://arxiv.org/abs/2006.04371">link</a>]</li>
+            <li>Digging into self-supervised monocular depth estimation
+                [<a href="https://arxiv.org/abs/2006.04371">link</a>]</li>
           </ol>
         </p>
       </div> 
