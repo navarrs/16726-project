@@ -14,12 +14,16 @@ def plotLosses(dirs):
         df[['train_loss', 'validation_loss']] = df["train_loss\tvalidation_loss"].str.split('\t', expand=True)
         del df["train_loss\tvalidation_loss"] #drop this monster of a column
         #print(df)
-        dfTrainLoss["exp%d" % (i)] = df["train_loss"]
-        dfValidLoss["exp%d" % (i)] = df["validation_loss"]
+        dfTrainLoss["exp%d" % (i+1)] = df["train_loss"]
+        dfValidLoss["exp%d" % (i+1)] = df["validation_loss"]
 
+    dfTrainLoss = dfTrainLoss.astype('float', copy=False)
     print(dfTrainLoss)
     #dfTrainLoss.set_index('Name').plot()
     dfTrainLoss.plot()
+    plt.title("Training Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
     plt.show()
 
 
